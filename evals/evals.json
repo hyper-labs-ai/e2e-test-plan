@@ -1,0 +1,26 @@
+{
+  "skill_name": "e2e-test-plan",
+  "evals": [
+    {
+      "id": 0,
+      "name": "create-web-plan",
+      "prompt": "Generate an E2E testing plan for the web/ subproject in my bee-epic-apiary project at /home/user/Documents/Dev/Projects/bee-epic-apiary/web/. This is a React 18 + TypeScript + Vite frontend with Hash Router (for GitHub Pages). It has product listing pages, product detail pages, a shopping cart with Redux state management, a testimonials section, a process/about page, and a Stripe checkout flow (client-side only via VITE_STRIPE_PUBLISHABLE_KEY). The web app consumes local JSON files from src/data/ for products, site content, testimonials, and process data. It does NOT have authentication. Generate a comprehensive plan covering all workflows and pages.",
+      "expected_output": "A complete E2E testing plan document with metadata, project overview, testing configuration, workflows (with happy paths and edge cases), issue reporting, user prompts, and cleanup instructions",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "update-plan-add-workflow",
+      "prompt": "Update the existing E2E testing plan at .e2e-plans/admin.md. I recently added a new 'Sales Reports' page to the admin subproject at /reports that shows a bar chart of daily sales, a date range picker (start date, end date), and a summary row with total revenue and order count for the selected period. The data comes from a new API endpoint GET /reports/sales?start_date=...&end_date=... which is also authenticated with the Bearer token. Add a new workflow for this page and update the plan file.",
+      "expected_output": "An updated E2E testing plan document with a new workflow for the Sales Reports page, including happy path and edge cases",
+      "files": [".e2e-plans/admin.md"]
+    },
+    {
+      "id": 2,
+      "name": "review-plan-accuracy",
+      "prompt": "Review the E2E testing plan at .e2e-plans/admin.md for completeness and accuracy. Compare each workflow against the actual admin subproject codebase at /home/user/Documents/Dev/Projects/bee-epic-apiary/admin/. Report any discrepancies, missing workflows, outdated selectors, or incorrect expected behaviors. Suggest specific updates if the plan is stale.",
+      "expected_output": "A review report listing discrepancies, missing coverage, outdated information, and suggested updates",
+      "files": [".e2e-plans/admin.md"]
+    }
+  ]
+}
