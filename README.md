@@ -16,6 +16,22 @@ Each plan includes authentication strategy (interactive/static/none), issue repo
 
 ## Installation
 
+### Quick install
+
+**macOS / Linux** (one-liner):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hyper-labs-ai/e2e-test-plan/main/install.sh | bash
+```
+
+**Windows** (PowerShell 5+ / pwsh):
+
+```powershell
+irm https://raw.githubusercontent.com/hyper-labs-ai/e2e-test-plan/main/install.ps1 | iex
+```
+
+Installs `SKILL.md`, `references/`, and `evals/` to `~/.agents/skills/e2e-test-plan/`.
+
 ### Option 1: Deploy from source (development)
 
 ```bash

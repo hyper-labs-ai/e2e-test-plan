@@ -14,6 +14,8 @@ An OpenCode skill that generates Playwright E2E test plan documents (`.md` files
 SKILL.md                          # Skill definition (source of truth)
 references/plan-template.md       # Template for generated E2E plans
 evals/evals.json                  # Eval prompts (used by skill-creator)
+install.sh                        # One-liner installer (macOS/Linux)
+install.ps1                       # One-liner installer (Windows PowerShell)
 deploy.sh                         # cp to ~/.agents/skills/e2e-test-plan/
 package.sh                        # Builds dist/e2e-test-plan.skill
 ```
@@ -22,10 +24,12 @@ No `package.json`, no tests, no lint/typecheck for the skill itself.
 
 ## Commands
 
-| Command        | What it does                                                      |
-| -------------- | ----------------------------------------------------------------- |
-| `./deploy.sh`  | Copy skill to `~/.agents/skills/e2e-test-plan/` for local testing |
-| `./package.sh` | Create distributable `.skill` zip in `dist/`                      |
+| Command         | What it does                                                      |
+| --------------- | ----------------------------------------------------------------- | ----------------------------------- |
+| `./install.sh`  | One-liner installer (`curl ...                                    | bash`) or local clone (macOS/Linux) |
+| `./install.ps1` | One-liner installer (`irm ...                                     | iex`) or local clone (Windows)      |
+| `./deploy.sh`   | Copy skill to `~/.agents/skills/e2e-test-plan/` for local testing |
+| `./package.sh`  | Create distributable `.skill` zip in `dist/`                      |
 
 ## Conventions
 
