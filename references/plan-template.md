@@ -16,7 +16,7 @@
 | **Date**           | `[YYYY-MM-DD]`                                         |
 | **Scope**          | [Entire project / Subproject name / Specific workflow] |
 | **Auth Method**    | [Interactive / Static / None]                          |
-| **Target Browser** | Playwright (Chromium)                                  |
+| **Target Browser** | Playwright (Chromium, Firefox, WebKit)                 |
 
 ---
 
@@ -54,11 +54,11 @@ npm run dev
 
 ## 3. Testing Configuration
 
-### Viewport
+### 3.1 Viewport
 
 Default: `1280x720`. The testing agent should set this in Playwright before starting.
 
-### Responsive Viewport Testing
+### 3.2 Responsive Viewport Testing
 
 The happy path of EVERY workflow must be tested at the following breakpoints to verify responsive behavior:
 
@@ -83,7 +83,85 @@ For each breakpoint, the testing agent MUST:
 
 Edge cases (non-happy-path scenarios) can be tested at the default desktop viewport only, unless the edge case is specifically about responsive behavior.
 
-### Authentication Detail
+### 3.3 data-testid Convention
+
+This plan prefers `data-testid` selectors for reliable element targeting. The recommended convention:
+
+| Pattern                          | Example               | Purpose               |
+| -------------------------------- | --------------------- | --------------------- |
+| `[data-testid="page-{name}"]`    | `page-product-detail` | Page-level container  |
+| `[data-testid="btn-{action}"]`   | `btn-add-to-cart`     | Buttons and actions   |
+| `[data-testid="input-{field}"]`  | `input-email`         | Form input fields     |
+| `[data-testid="form-{name}"]`    | `form-checkout`       | Form containers       |
+| `[data-testid="nav-{name}"]`     | `nav-main-menu`       | Navigation elements   |
+| `[data-testid="msg-{type}"]`     | `msg-error`           | Messages and alerts   |
+| `[data-testid="list-{name}"]`    | `list-products`       | List/table containers |
+| `[data-testid="heading-{page}"]` | `heading-admin`       | Page headings         |
+
+Selector priority (use first available): `data-testid` > ARIA role > text content > CSS class.
+
+### 3.4 Timeout Conventions
+
+The testing agent MUST use these default timeout values:
+
+| Context            | Timeout | Notes                                          |
+| ------------------ | ------- | ---------------------------------------------- |
+| Element visibility | 5s      | `page.waitForSelector` with `state: "visible"` |
+| Page navigation    | 10s     | `page.waitForURL`, `page.goto`                 |
+| Network idle       | 15s     | `page.waitForLoadState("networkidle")`         |
+| DOM content loaded | 30s     | `page.waitForLoadState("domcontentloaded")`    |
+| Auth detection     | 5min    | Interactive login wait                         |
+| Retry base delay   | 1s      | Doubles on each retry (1s, 2s, 4s)             |
+
+Per-step timeouts may override these defaults in the Detailed Steps section.
+
+### 3.5 Retry Strategy
+
+When a step fails during execution, the testing agent MUST follow this policy:
+
+- **Max retries per step**: 3
+- **Backoff**: Exponential (1s, 2s, 4s)
+- **Retry condition**: Only on `TimeoutError`, `NoSuchElementError`, or transient network failures
+- **Do NOT retry**: Assertion failures (wrong text, wrong URL, wrong state — these are real bugs)
+
+**Abort execution when**:
+
+- A step fails after exhausting all retries
+- A P0 (critical) workflow step fails
+- The application shows a fatal error (HTTP 500, blank page, crash overlay)
+- The testing environment becomes unreachable
+
+**Continue despite failure when**:
+
+- A non-critical check fails (visual diff, responsive layout at non-default breakpoint)
+- An edge case fails — log the issue, continue the happy path
+- Cleanup fails — log and continue (the test has already run)
+
+**Flaky detection**: Log any step that passes only after retries. A pattern of retry-dependent passes may indicate a timing issue in the test rather than a real bug.
+
+### 3.6 Accessibility Checks
+
+At every step where `a11y check: true` is specified, the testing agent MUST:
+
+1. **Automated scan**: Inject and run `axe-core` (or equivalent). Check for:
+   - Color contrast violations
+   - Missing ARIA labels on interactive elements
+   - Missing form label associations
+   - Improper heading hierarchy (h1→h2→h3 — no skips)
+   - Missing alt text on informative images
+   - Insufficient focus indicators
+
+2. **Keyboard navigation**: Tab through all interactive elements:
+   - All form fields, buttons, and links reachable via Tab
+   - Focus order follows visual/logical order
+   - Focus indicator visible at all times
+   - No focus traps (modal must be closable via Escape or close button)
+
+3. **Screen reader hints**: Verify ARIA roles are appropriate, `aria-expanded` reflects current state, `aria-live` regions are used for dynamic content updates.
+
+Report a11y violations using the issue report format in this plan.
+
+### 3.7 Authentication Detail
 
 [This section changes based on the auth method chosen during plan generation.]
 
@@ -130,6 +208,15 @@ The testing agent MUST:
 
 ### Workflow 1: [Workflow Name]
 
+**Metadata**:
+
+| Field            | Value                                              |
+| ---------------- | -------------------------------------------------- |
+| **Priority**     | P0 (critical) / P1 (important) / P2 (nice-to-have) |
+| **Tags**         | smoke / regression / slow                          |
+| **Duration**     | ~[time]s                                           |
+| **Dependencies** | [Other workflows required, or "None"]              |
+
 **Description**: [What this workflow achieves from the user's perspective]
 
 **Preconditions**:
@@ -138,13 +225,19 @@ The testing agent MUST:
 - [Precondition 2, e.g., "User is logged in"]
 - [Precondition 3, e.g., "At least one product exists in the database"]
 
+**Test Data**:
+
+| Record            | Creation Method  | Identifier           | Cleanup    |
+| ----------------- | ---------------- | -------------------- | ---------- |
+| [Required record] | [API/UI/Fixture] | [Name or ID pattern] | [Strategy] |
+
 #### Happy Path
 
-| Step | Action               | Selector Hint                                                 | Expected Result             |
-| ---- | -------------------- | ------------------------------------------------------------- | --------------------------- |
-| 1    | [Action description] | [e.g., `button:text("Login")` or `[data-testid="login-btn"]`] | [What should appear/change] |
-| 2    | [Action description] | [e.g., `input[name="email"]`]                                 | [What should appear/change] |
-| 3    | [Action description] | [e.g., `button:text("Submit")`]                               | [Final expected outcome]    |
+| Step | Action               | Selector Hint                                                 | a11y | Expected Result             |
+| ---- | -------------------- | ------------------------------------------------------------- | ---- | --------------------------- |
+| 1    | [Action description] | [e.g., `button:text("Login")` or `[data-testid="login-btn"]`] | Y/N  | [What should appear/change] |
+| 2    | [Action description] | [e.g., `input[name="email"]`]                                 | Y/N  | [What should appear/change] |
+| 3    | [Action description] | [e.g., `button:text("Submit")`]                               | Y/N  | [Final expected outcome]    |
 
 #### Detailed Steps
 
@@ -152,11 +245,12 @@ The testing agent MUST:
 
 ```
 Action:       [Describe exactly what to do — click, type, navigate, wait]
-Selector:     [Playwright-compatible selector]
+Selector:     [Playwright-compatible selector, prefer data-testid]
 Input:        [If typing, what text to enter]
 Wait for:     [Element or URL to wait for after the action]
 Validate:     [What to check — element visible, text present, URL changed, etc.]
-Visual check: [What to verify visually — layout, element visibility, no visual defects]
+Visual check: [What to verify visually — layout, no visual defects]
+a11y check:   [true/false — run axe-core and keyboard navigation checks]
 Screenshot:   [true/false — whether to capture a screenshot at this step]
 ```
 
@@ -169,6 +263,7 @@ Input:        [If typing, what text to enter]
 Wait for:     [Element or URL to wait for after the action]
 Validate:     [What to check]
 Visual check: [What to verify visually]
+a11y check:   [true/false]
 Screenshot:   [true/false]
 ```
 
@@ -235,56 +330,7 @@ other issues, fall back to filing an issue report.
 ### Option B: File an Issue Report
 
 Create a detailed issue file in `.issues/<workflow-name>-<kebab-case-description>.md`
-using the following GitHub-issue-like format:
-
-```markdown
----
-title: "[Workflow Name] - [Brief issue description]"
-workflow: "[Workflow Name]"
-step: [Step number]
-date: "[YYYY-MM-DD]"
----
-
-## Description
-
-[What went wrong — 2-3 sentences]
-
-## Steps to Reproduce
-
-1. [Step 1 from the workflow that led to the issue]
-2. [Step 2]
-3. [Step N — the failing step]
-
-## Current Behavior
-
-[What actually happened — error message, wrong state, missing element, etc.]
-
-## Expected Behavior
-
-[What should have happened per the plan]
-
-## Screenshot
-
-![Screenshot](data:image/png;base64,[Base64-encoded Playwright screenshot taken at the moment of failure])
-
-## Browser Console Errors
-```
-
-[Any console.error or console.warn messages captured during the failing interaction]
-
-```
-
-## Suggested Fix
-
-[Based on your understanding of the codebase, suggest what might be causing the issue and how to fix it. Include file paths and line numbers if known.]
-
-## Environment
-
-- Browser: Playwright (Chromium)
-- Viewport: [viewport at time of failure, e.g. 1280x720]
-- URL: [URL where the issue occurred]
-- Plan Version: [Version from metadata]
-```
+using the format defined in `references/plan-formats.md` (see "Issue Report Format").
 
 ---
 
@@ -304,6 +350,8 @@ Wait for the user's answer to each question before proceeding.
 4. **Responsive testing**: "Should I run responsive checks at all breakpoints (desktop at 1280x720, tablet at 768x1024, and mobile at 375x812), or just the default desktop viewport?"
 
 5. **Visual checks**: "Should I capture screenshots at each step for visual verification, and do you want me to flag any visual issues I notice?"
+
+6. **Accessibility**: "Should I run accessibility checks (aXe scans and keyboard navigation) at each step, or skip them?"
 
 ---
 

@@ -17,6 +17,7 @@ fi
 mkdir -p "$TARGET/references" "$TARGET/evals"
 cp "$SKILL_DEV/SKILL.md" "$TARGET/SKILL.md"
 cp "$SKILL_DEV/references/plan-template.md" "$TARGET/references/plan-template.md"
+cp "$SKILL_DEV/references/plan-formats.md" "$TARGET/references/plan-formats.md"
 cp "$SKILL_DEV/evals/evals.json" "$TARGET/evals/evals.json"
 
 echo "✓ Deployed to $TARGET"

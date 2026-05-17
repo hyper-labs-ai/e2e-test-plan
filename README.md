@@ -12,7 +12,7 @@ This skill guides an AI agent to:
 - **Update** existing plans when new features are added
 - **Review** existing plans for accuracy against the actual codebase
 
-Each plan includes authentication strategy (interactive/static/none), issue reporting rules, cleanup and state restoration instructions, and user prompts for the testing agent at execution time.
+Each plan includes authentication strategy (interactive/static/none), `data-testid` selector conventions, timeout/retry policies, accessibility check requirements, workflow priority tagging (P0/P1/P2), test data seeding strategy, responsive breakpoint testing, issue reporting rules, cleanup and state restoration instructions, and user prompts for the testing agent at execution time.
 
 ## Installation
 
@@ -87,7 +87,8 @@ e2e-test-plan/
 ├── package.sh                  # Build distributable .skill file
 ├── dist/                       # Packaged .skill output
 ├── references/
-│   └── plan-template.md        # Template for generated E2E plans
+│   ├── plan-template.md        # Template for generated E2E plans
+│   └── plan-formats.md         # Standard formats for steps, edge cases, etc.
 ├── evals/
 │   └── evals.json              # Test prompts for evaluation
 └── .e2e-test-plan-workspace/   # Testing artifacts (git-ignore this)
@@ -99,9 +100,10 @@ e2e-test-plan/
 
 1. Edit `SKILL.md` for skill behavior changes
 2. Edit `references/plan-template.md` for output format changes
-3. Edit `evals/evals.json` to add or modify test prompts
-4. Run `./deploy.sh` to test changes locally
-5. Run `./package.sh` to build the distributable `.skill` file
+3. Edit `references/plan-formats.md` for step/edge-case/cleanup/issue-report format changes
+4. Edit `evals/evals.json` to add or modify test prompts
+5. Run `./deploy.sh` to test changes locally
+6. Run `./package.sh` to build the distributable `.skill` file
 
 ### Running evaluations
 
@@ -111,17 +113,19 @@ The `.e2e-test-plan-workspace/` directory contains the evaluation framework. Eac
 
 Plans are saved as `.md` files in `.e2e-plans/` at your project root. Each plan includes:
 
-| Section                    | What it covers                                     |
-| -------------------------- | -------------------------------------------------- |
-| Metadata                   | Plan ID, version, scope, auth method               |
-| Project Overview           | Deploy instructions, URLs, env variables           |
-| Testing Configuration      | Viewport, responsive breakpoints, auth detail      |
-| Workflows                  | Happy paths with step-by-step instructions         |
-| Edge Cases                 | Deviations from happy paths with expected outcomes |
-| Visual & Responsive Checks | Breakpoints, screenshot requirements               |
-| Cleanup & Restoration      | How to restore system state after each workflow    |
-| Issue Reporting            | How the testing agent reports problems found       |
-| User Prompts               | Questions the testing agent asks before executing  |
+| Section                    | What it covers                                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Metadata                   | Plan ID, version, scope, auth method                                                                                                                    |
+| Project Overview           | Deploy instructions, URLs, env variables                                                                                                                |
+| Test Data Requirements     | What data must exist and how to seed it                                                                                                                 |
+| Testing Configuration      | Viewport, responsive breakpoints, data-testid convention, timeout conventions, retry strategy, accessibility checks, auth detail                        |
+| Workflows                  | Metadata (priority/tags/duration), preconditions, test data, happy paths with step-by-step instructions (a11y, visual, screenshot), edge cases, cleanup |
+| Visual & Responsive Checks | Breakpoints, screenshot requirements                                                                                                                    |
+| Accessibility Checks       | aXe scans, keyboard navigation, screen reader hints                                                                                                     |
+| Retry & Flaky Strategy     | How the testing agent handles step failures and flaky detection                                                                                         |
+| Cleanup & Restoration      | How to restore system state after each workflow                                                                                                         |
+| Issue Reporting            | How the testing agent reports problems found                                                                                                            |
+| User Prompts               | Questions the testing agent asks before executing                                                                                                       |
 
 ## Requirements
 

@@ -27,6 +27,7 @@ if [[ -f "$SCRIPT_DIR/SKILL.md" && -d "$SCRIPT_DIR/references" ]]; then
   mkdir -p "$TARGET/references" "$TARGET/evals"
   cp "$SCRIPT_DIR/SKILL.md" "$TARGET/SKILL.md"
   cp "$SCRIPT_DIR/references/plan-template.md" "$TARGET/references/plan-template.md"
+  cp "$SCRIPT_DIR/references/plan-formats.md" "$TARGET/references/plan-formats.md"
   [[ -f "$SCRIPT_DIR/evals/evals.json" ]] && cp "$SCRIPT_DIR/evals/evals.json" "$TARGET/evals/evals.json"
 else
   echo "Downloading from GitHub ($REPO)..."
@@ -44,6 +45,7 @@ else
   mkdir -p "$TARGET/references" "$TARGET/evals"
   cp "$EXTRACTED_DIR/SKILL.md" "$TARGET/SKILL.md"
   cp "$EXTRACTED_DIR/references/plan-template.md" "$TARGET/references/plan-template.md"
+  cp "$EXTRACTED_DIR/references/plan-formats.md" "$TARGET/references/plan-formats.md"
   [[ -f "$EXTRACTED_DIR/evals/evals.json" ]] && cp "$EXTRACTED_DIR/evals/evals.json" "$TARGET/evals/evals.json"
 fi
 

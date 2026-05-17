@@ -14,6 +14,7 @@ trap 'rm -rf "$STAGING"' EXIT
 mkdir -p "$STAGING/$SKILL_NAME/references" "$STAGING/$SKILL_NAME/evals"
 cp "$SKILL_DIR/SKILL.md" "$STAGING/$SKILL_NAME/SKILL.md"
 cp "$SKILL_DIR/references/plan-template.md" "$STAGING/$SKILL_NAME/references/plan-template.md"
+cp "$SKILL_DIR/references/plan-formats.md" "$STAGING/$SKILL_NAME/references/plan-formats.md"
 cp "$SKILL_DIR/evals/evals.json" "$STAGING/$SKILL_NAME/evals/evals.json"
 
 # Create output directory

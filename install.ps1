@@ -36,6 +36,7 @@ New-Item -ItemType Directory -Path "$TargetDir\evals" -Force | Out-Null
 # Copy skill files
 Copy-Item "$RepoDir\SKILL.md" "$TargetDir\SKILL.md" -Force
 Copy-Item "$RepoDir\references\plan-template.md" "$TargetDir\references\plan-template.md" -Force
+Copy-Item "$RepoDir\references\plan-formats.md" "$TargetDir\references\plan-formats.md" -Force
 if (Test-Path "$RepoDir\evals\evals.json") {
     Copy-Item "$RepoDir\evals\evals.json" "$TargetDir\evals\evals.json" -Force
 }

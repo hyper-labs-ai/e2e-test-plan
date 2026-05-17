@@ -1,16 +1,18 @@
 ---
 name: e2e-test-plan
 description: >
-  Create, update, review, and maintain End-To-End (E2E) browser testing plans
-  for web apps using Playwright. This skill is for PLANNING what to test in the
-  browser — it maps out workflows, defines happy paths and edge cases, and
-  writes step-by-step test instructions for a Playwright-based testing agent.
-  Trigger on: "make a test plan", "testing strategy", "what should I test in
-  the browser", "map out workflows for testing", "write test cases for [flow]",
-  "browser testing plan", "Playwright test plan", "E2E test plan", "test
-  coverage for my app", "help me plan testing for [feature]", "audit test
+  Create, update, review, and audit comprehensive End-To-End (E2E) browser
+  testing plans for web apps using Playwright. This skill is for PLANNING what
+  to test in the browser — it maps out every workflow, defines happy paths and
+  edge cases, documents selectors and expected outcomes, and produces
+  step-by-step test instructions a Playwright-based testing agent can follow
+  blindly. Trigger on: "make a test plan", "testing strategy", "what should I
+  test in the browser", "map out workflows for testing", "write test cases for
+  [flow]", "browser testing plan", "Playwright test plan", "E2E test plan",
+  "test coverage for my app", "help me plan testing for [feature]", "audit test
   coverage", "update my test plan", "review test plan accuracy". Even casual
-  requests like "plan what to test in my app" should trigger. Do NOT use for:
+  requests like "I need to know what to test in my app", "plan what I should
+  test", or "create a testing checklist" should trigger. Do NOT use for:
   unit/integration/API tests, running tests, debugging failures, test
   infrastructure, test data generation, or performance testing.
 ---
@@ -56,6 +58,8 @@ The output is always one or more **E2E Testing Plan documents** (`.md` files) st
 3. **Separate plan from execution**: The plan is a static document. Any decision that must be made at test-execution time (e.g., "what credentials do I use?") should be encoded as a question the testing agent asks the user before starting.
 
 4. **Happy paths first, edge cases second**: Always document the happy path completely before listing edge cases. Edge cases are expressed as deviations from the happy path.
+
+5. **Data-testid over fragile selectors**: Plans must prefer `data-testid` attributes over text content or CSS class selectors. Text-based selectors break on copy changes, i18n, and similar-looking elements. If the project doesn't use `data-testid` attributes, the plan should recommend adopting them and document a naming convention.
 
 ---
 
@@ -227,6 +231,17 @@ List all workflows. A workflow is any end-to-end user journey that achieves a go
 - Creating, editing, and deleting a resource
 - Admin user management
 
+#### Workflow Tagging
+
+Tag each workflow with metadata for test selection:
+
+- **Priority**: `P0` (critical path — must pass before deployment), `P1` (important — fix within the sprint), `P2` (nice-to-have — can defer)
+- **Tags**: `smoke` (fast, broad coverage — run on every commit), `regression` (in-depth — run before release), `slow` (workflow takes >30s)
+- **Estimated duration**: How long the happy path takes end-to-end (e.g., `~45s`)
+- **Dependencies**: Other workflows that must run first (e.g., "Requires 'User Registration' to have created an account")
+
+Include this metadata at the top of each workflow definition in the plan.
+
 #### Happy Path Definition
 
 For each workflow, document:
@@ -237,19 +252,7 @@ For each workflow, document:
 - **Final expected outcome**: How does the workflow end successfully?
 - **Cleanup and restoration**: How to restore the system to its pre-test state after the workflow completes. If resources were created, specify how to delete them. If resources were edited or deleted, specify how to revert them. Prefer self-contained workflows where resources are created, exercised, and cleaned up in a single run so there is no residual state.
 
-Format each step as:
-
-```
-Step N: [Action description]
-  Action:        [e.g., Click "Add to Cart" button]
-  Selector:      [e.g., button:text("Add to Cart") or [data-testid="add-to-cart"]]
-  Input:         [If typing, what text to enter — or "N/A"]
-  Wait for:      [Element, URL, or state to wait for after the action]
-  Validate:      [What to check — element visible, text present, URL changed, etc.]
-  Visual check:  [What to verify visually — layout, no overlapping elements, text not truncated, images loaded]
-  Screenshot:    [true/false — whether to capture a screenshot at this step]
-  Expected:      [e.g., Cart badge shows count of 1, toast notification "Item added"]
-```
+Format each step using the template in `references/plan-formats.md` (see "Happy Path Step Format").
 
 #### Edge Case Definition
 
@@ -263,15 +266,7 @@ For each workflow, identify edge cases as deviations from the happy path:
 - **Concurrent operations**: Double-submitting forms, opening multiple tabs
 - **Missing dependencies**: Required data or services not available
 
-Format each edge case as:
-
-```
-Edge Case N: [Brief description]
-  Happy step reference: [The happy-path step this deviates from]
-  Variation: [What differs from the happy path]
-  Action: [What the testing agent should do instead]
-  Expected: [What should happen — this is often an error message or fallback UI]
-```
+Format each edge case using the template in `references/plan-formats.md` (see "Edge Case Format").
 
 #### Visual & Responsive UI Checks
 
@@ -296,6 +291,28 @@ For each breakpoint, the testing agent must:
 
 Edge cases (non-happy-path scenarios) can be tested at the default viewport only, unless the edge case is specifically about responsive behavior.
 
+#### Accessibility Checks
+
+For every workflow step that renders a new page or significant UI update, the testing agent MUST run accessibility assertions:
+
+1. **Automated aXe scan**: After the page loads, inject `axe-core` and scan the DOM for:
+   - Color contrast violations
+   - Missing ARIA labels on interactive elements
+   - Missing form label associations
+   - Improper heading hierarchy (h1→h2→h3 — no skips)
+   - Missing alt text on informative images
+   - Insufficient focus indicators
+
+2. **Keyboard navigation**: Tab through all interactive elements:
+   - All form fields, buttons, and links reachable via Tab
+   - Focus order follows visual/logical order
+   - Focus indicator visible at all times
+   - No focus traps (modal must be closable via Escape or close button)
+
+3. **Screen reader hints**: Verify ARIA roles are appropriate, `aria-expanded` reflects current state, `aria-live` regions used for dynamic content.
+
+Document which steps require a11y checks using the `a11y check: true/false` field in each step's happy path format (see `references/plan-formats.md`). Report any violations using the issue format defined in this plan.
+
 #### State Cleanup and Restoration
 
 Every workflow that modifies data (create, update, delete) MUST document how to restore the system's state after the test. This ensures tests can be run repeatedly without accumulating stale test data or leaving the system in an inconsistent state.
@@ -311,15 +328,26 @@ For each workflow, document:
   - **Idempotent state**: The workflow operates on data designed to be ephemeral or self-cleaning (e.g., a session cart that disappears after checkout). No explicit cleanup needed.
 - **Verification**: How to confirm cleanup succeeded (e.g., "Navigate to the product list and verify the test product no longer appears").
 
-Format the cleanup section in each workflow as:
+Format the cleanup section using the template in `references/plan-formats.md` (see "Cleanup Section Format" and "Workflow Cleanup Strategy Summary").
 
-```
-#### Cleanup
+---
 
-| Resource | Cleanup Action | Verification |
-|----------|----------------|--------------|
-| [Test product "e2e-item"] | Delete via product settings page | Product list no longer shows "e2e-item" |
-```
+### Step 5.5: Define Test Data Strategy
+
+For each workflow, document what data must exist as preconditions and how the testing agent should create or verify it. Without this, the testing agent has no way to ensure the app is in the right state before starting.
+
+**Test data considerations per workflow:**
+
+1. **Required records**: What data must already exist? (e.g., "a published product with price $19.99", "a user account with admin role", "at least 3 items in the cart")
+2. **Creation method**: How should the testing agent create this data?
+   - **API seeding**: Call internal APIs to create records before the browser flow. Preferred when API endpoints exist.
+   - **UI seeding**: Navigate through the UI to create prerequisite data. Use when no API exists or the workflow itself is about creation.
+   - **Fixture file**: Load from a fixture file (e.g., `test-data/products.json`). Use when the app supports fixture loading.
+   - **Ask user**: Ask the user to ensure data exists. Last resort.
+3. **Isolation**: How to prevent test data collisions across runs. Use unique names (e.g., `e2e-test-product-{timestamp}`) and clean up after each run.
+4. **Environment-specific data**: Some data only exists in certain environments (dev/staging/production). Note which data is environment-specific.
+
+Document test data for each workflow using the table format in `references/plan-formats.md` (see "Test Data Table Format").
 
 ---
 
@@ -329,7 +357,7 @@ Format the cleanup section in each workflow as:
 
 Present these options:
 
-````
+```
 When the testing agent finds an issue during test execution, how should it be handled?
 
 1. **Fix immediately** — The testing agent attempts to diagnose and fix the
@@ -339,87 +367,30 @@ When the testing agent finds an issue during test execution, how should it be ha
 
 2. **File an issue report** — The testing agent creates a detailed issue file
    in the `.issues/` directory at the project root. One file per issue, named
-   `<workflow-name>-<kebab-case-description>.md`. The file must use the
-   following GitHub-issue-like format so a coding agent can pick it up:
-
-   ```markdown
-   ---
-   title: "[Workflow Name] - [Brief issue description]"
-   workflow: "[Workflow Name]"
-   step: [Step number]
-   date: "[YYYY-MM-DD]"
-   ---
-
-   ## Description
-
-   [What went wrong — 2-3 sentences]
-
-   ## Steps to Reproduce
-
-   1. [Step 1 from the workflow that led to the issue]
-   2. [Step 2]
-   3. [Step N — the failing step]
-
-   ## Current Behavior
-
-   [What actually happened — error message, wrong state, missing element, etc.]
-
-   ## Expected Behavior
-
-   [What should have happened per the plan]
-
-   ## Screenshot
-
-   ![Screenshot](data:image/png;base64,[Base64-encoded screenshot taken via
-   Playwright at the moment of failure])
-
-   ## Browser Console Errors
-
-````
-
-[Any console.error or console.warn messages captured during the failing
-interaction]
-
-```
-
-## Suggested Fix
-
-[Based on the plan generator's understanding of the codebase, suggest what
-might be causing the issue and how to fix it. Include file paths and line
-numbers if known.]
-
-## Environment
-
-- Browser: Playwright (Chromium)
-- Viewport: [viewport at time of failure]
-- URL: [URL where the issue occurred]
-- Plan Version: [Version from metadata]
-```
+   `<workflow-name>-<kebab-case-description>.md`. Use the issue report format
+   defined in `references/plan-formats.md` (see "Issue Report Format").
 
 Note: The `.issues/` directory and its contents are git-ignored by default.
 These files are intended as handoff artifacts for a coding agent.
-
 ```
 
 ---
 
 ### Step 7: Generate the E2E Testing Plan
 
-Using all the information gathered in Steps 1-6, generate the plan document(s).
+Using all the information gathered in Steps 1-7.5, generate the plan document(s).
 
 #### Plan Location
 
 Plans are stored in `.e2e-plans/` at the project root:
 
 ```
-
 .e2e-plans/
 ├── README.md # Index of all plans in this directory
 ├── ROOT.md # Plan for the root project (if it has a UI)
 ├── subproject-admin.md # Plan for the "admin" subproject
 └── subproject-store.md # Plan for the "store" subproject
-
-````
+```
 
 Each plan document follows the structure defined in `references/plan-template.md`. Load that file now to use as a template.
 
@@ -428,20 +399,55 @@ Each plan document follows the structure defined in `references/plan-template.md
 Every plan MUST contain:
 
 1. **Metadata**: Plan ID, version, date, scope, auth method
-2. **Project Overview**: Brief description, how to deploy, URL(s)
-3. **Testing Configuration**: Browser (Playwright), viewport, auth details
-4. **Workflow Definitions**: Each with happy paths and edge cases
-5. **Issue Reporting Instructions**: For the testing agent
-6. **User Prompts**: Instructions embedded in the plan for the testing agent to ask the user about scope confirmation and issue handling at execution time
-7. **Visual & Responsive UI Checks**: Breakpoints to test, what to verify visually at each step, and screenshot requirements
-8. **Cleanup & State Restoration**: How each workflow restores the system to its pre-test state after execution
+2. **Project Overview**: Brief description, how to deploy, URL(s), required env vars
+3. **Test Data Requirements**: What data must exist and how to seed it
+4. **Testing Configuration**: Browser (Playwright), viewport, auth details, timeout conventions, retry policy, data-testid convention, accessibility check requirements
+5. **Workflow Definitions**: Each workflow with metadata (priority, tags, duration), preconditions, happy paths with step-by-step instructions (including visual, a11y, and screenshot requirements), edge cases, test data, and cleanup
+6. **Issue Reporting Instructions**: For the testing agent (fix-immediately or file-issue report)
+7. **User Prompts**: Instructions embedded in the plan for the testing agent to ask the user about scope confirmation and issue handling at execution time
+8. **Visual & Responsive UI Checks**: Breakpoints to test, what to verify visually at each step, and screenshot requirements
+9. **Accessibility Checks**: Automated aXe scans, keyboard navigation, screen reader hints
+10. **Retry & Flaky Test Strategy**: How the testing agent handles step failures, retry limits, and abort conditions
+11. **Cleanup & State Restoration**: How each workflow restores the system to its pre-test state after execution
 
 #### Multi-Subproject Plans
 
 For monorepos and multi-service projects:
+
 - Generate a **ROOT.md** plan only if the root project itself has a UI
 - Generate a separate plan file for each subproject that has a UI
 - Create a **README.md** index file that lists all plans and describes how they relate
+
+---
+
+### Step 7.5: Define Retry & Flaky Test Strategy
+
+Document how the testing agent should handle step failures during execution. This prevents transient failures (network latency, animation timing, state settling) from aborting the entire test run.
+
+**Default retry policy:**
+
+```
+Max retries per step: 3
+Base delay:           1s before first retry
+Backoff:              Exponential (1s, 2s, 4s)
+Retry condition:      Only on TimeoutError, NoSuchElementError, or transient failures
+Do NOT retry on:      Assertion failures (wrong text, wrong URL, wrong state)
+```
+
+**When to abort execution:**
+
+- A step fails after exhausting all retries
+- A P0 (critical) workflow step fails
+- The application crashes (HTTP 500, blank page, React error overlay)
+- The testing environment becomes unreachable
+
+**When to continue despite failure:**
+
+- A non-critical check fails (visual diff, responsive layout at non-default breakpoint)
+- An edge case fails — log the issue but continue the happy path
+- Cleanup fails — log and continue (the test has already run)
+
+**Flaky detection**: The testing agent MUST log any step that passes only after retries. A pattern of retry-dependent passes may indicate a timing issue in the test rather than a real bug. Flag these in the test summary so a developer can review the step's wait conditions.
 
 ---
 
@@ -496,9 +502,10 @@ Load `references/plan-template.md` for the full template structure to use when g
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `references/plan-template.md` | The full E2E Test Plan template with all required sections and example content |
+| File                          | Purpose                                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| `references/plan-template.md` | The full E2E Test Plan template with all required sections and example content                  |
+| `references/plan-formats.md`  | Standard formats for happy path steps, edge cases, cleanup, test data tables, and issue reports |
 
 ## Scripting Guidelines
 
@@ -516,6 +523,6 @@ if (!fs.existsSync(plansDir)) {
   fs.mkdirSync(plansDir, { recursive: true });
 }
 console.log(`.e2e-plans/ directory ready at ${plansDir}`);
-````
+```
 
 Use `npx tsx` to run TypeScript scripts directly. Place any scripts in a `scripts/` subdirectory within this skill.

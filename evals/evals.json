@@ -4,23 +4,30 @@
     {
       "id": 0,
       "name": "create-web-plan",
-      "prompt": "Generate an E2E testing plan for the web/ subproject in my bee-epic-apiary project at /home/user/Documents/Dev/Projects/bee-epic-apiary/web/. This is a React 18 + TypeScript + Vite frontend with Hash Router (for GitHub Pages). It has product listing pages, product detail pages, a shopping cart with Redux state management, a testimonials section, a process/about page, and a Stripe checkout flow (client-side only via VITE_STRIPE_PUBLISHABLE_KEY). The web app consumes local JSON files from src/data/ for products, site content, testimonials, and process data. It does NOT have authentication. Generate a comprehensive plan covering all workflows and pages.",
-      "expected_output": "A complete E2E testing plan document with metadata, project overview, testing configuration, workflows (with happy paths and edge cases), issue reporting, user prompts, and cleanup instructions",
+      "prompt": "Generate an E2E testing plan for the web/ subproject in my bee-epic-apiary project at /home/user/Documents/Dev/Projects/bee-epic-apiary/web/. This is a React 18 + TypeScript + Vite frontend with Hash Router (for GitHub Pages). It has product listing pages, product detail pages, a shopping cart with Redux state management, a testimonials section, a process/about page, and a Stripe checkout flow (client-side only via VITE_STRIPE_PUBLISHABLE_KEY). The web app consumes local JSON files from src/data/ for products, site content, testimonials, and process data. It does NOT have authentication. Include workflow tagging (priority/tags/duration), test data strategy, accessibility checks, responsive breakpoints, and a retry/flaky test strategy in the plan.",
+      "expected_output": "A complete E2E testing plan document with metadata, project overview, test data requirements, testing configuration (including data-testid convention, timeout conventions, retry strategy, accessibility checks), workflows (with priority/tags/duration metadata, happy paths with a11y column, edge cases, test data, and cleanup), issue reporting, user prompts, and plan version history",
       "files": []
     },
     {
       "id": 1,
       "name": "update-plan-add-workflow",
-      "prompt": "Update the existing E2E testing plan at .e2e-plans/admin.md. I recently added a new 'Sales Reports' page to the admin subproject at /reports that shows a bar chart of daily sales, a date range picker (start date, end date), and a summary row with total revenue and order count for the selected period. The data comes from a new API endpoint GET /reports/sales?start_date=...&end_date=... which is also authenticated with the Bearer token. Add a new workflow for this page and update the plan file.",
-      "expected_output": "An updated E2E testing plan document with a new workflow for the Sales Reports page, including happy path and edge cases",
+      "prompt": "Update the existing E2E testing plan at .e2e-plans/admin.md. I recently added a new 'Sales Reports' page to the admin subproject at /reports that shows a bar chart of daily sales, a date range picker (start date, end date), and a summary row with total revenue and order count for the selected period. The data comes from a new API endpoint GET /reports/sales?start_date=...&end_date=... which is authenticated with a Bearer token. Add a new workflow for this page with appropriate priority tagging (this is P1/smoke), test data requirements (needs at least one order in the selected date range), and accessibility checks (the chart must have ARIA labels).",
+      "expected_output": "An updated E2E testing plan with a new Sales Reports workflow including metadata (P1 priority, smoke tag), test data requirements, happy path with a11y checks, and edge cases",
       "files": [".e2e-plans/admin.md"]
     },
     {
       "id": 2,
       "name": "review-plan-accuracy",
-      "prompt": "Review the E2E testing plan at .e2e-plans/admin.md for completeness and accuracy. Compare each workflow against the actual admin subproject codebase at /home/user/Documents/Dev/Projects/bee-epic-apiary/admin/. Report any discrepancies, missing workflows, outdated selectors, or incorrect expected behaviors. Suggest specific updates if the plan is stale.",
-      "expected_output": "A review report listing discrepancies, missing coverage, outdated information, and suggested updates",
+      "prompt": "Review the E2E testing plan at .e2e-plans/admin.md for completeness and accuracy. Compare each workflow against the actual admin subproject codebase at /home/user/Documents/Dev/Projects/bee-epic-apiary/admin/. Report any discrepancies, missing workflows, outdated selectors, or incorrect expected behaviors. Specifically check: (1) whether data-testid selectors match actual attributes in the codebase, (2) whether workflow priority/tags are appropriate, (3) whether accessibility check requirements match actual ARIA usage, and (4) whether the retry strategy and timeout conventions are documented.",
+      "expected_output": "A review report listing discrepancies, missing coverage, outdated information, and suggested updates with emphasis on data-testid selectors, workflow metadata, a11y requirements, and retry strategy",
       "files": [".e2e-plans/admin.md"]
+    },
+    {
+      "id": 3,
+      "name": "create-plan-with-auth-and-data",
+      "prompt": "Create an E2E test plan for the inventory management dashboard at /home/user/Documents/Dev/Projects/warehouse-app/. This is a Vue 3 + Pinia app with auth (login/logout via JWT), a products table with CRUD, a suppliers page, and a stock alerts page. It uses data-testid attributes throughout. I want static auth using env vars. Focus on the products CRUD workflow and the stock alerts workflow. Tag products CRUD as P0/smoke and stock alerts as P1/regression. Include API-based test data seeding for product records.",
+      "expected_output": "An E2E testing plan focused on products CRUD and stock alerts workflows, with static auth method, data-testid selectors, API-based test data seeding, workflow metadata (P0/smoke and P1/regression), and all required configuration sections",
+      "files": []
     }
   ]
 }

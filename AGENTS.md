@@ -13,6 +13,7 @@ An OpenCode skill that generates Playwright E2E test plan documents (`.md` files
 ```
 SKILL.md                          # Skill definition (source of truth)
 references/plan-template.md       # Template for generated E2E plans
+references/plan-formats.md        # Standard formats for steps, edge cases, cleanup, test data, issues
 evals/evals.json                  # Eval prompts (used by skill-creator)
 install.sh                        # One-liner installer (macOS/Linux)
 install.ps1                       # One-liner installer (Windows PowerShell)
@@ -36,6 +37,7 @@ No `package.json`, no tests, no lint/typecheck for the skill itself.
 - Generated plans go in `.e2e-plans/` at the **target project's** root (not this repo).
 - Helper scripts use **TypeScript** via `npx tsx` — no Python, no Rust.
 - Edits to `references/plan-template.md` change output format for all generated plans.
+- Edits to `references/plan-formats.md` change output format for step/edge-case/cleanup/issue-report blocks.
 - Edits to `evals/evals.json` add/modify test prompts for skill-creator evals.
 - Do not commit `dist/` or `.e2e-test-plan-workspace/` (gitignored).
 - Plans must not be saved to disk until the user explicitly approves.
