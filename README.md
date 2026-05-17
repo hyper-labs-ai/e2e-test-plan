@@ -21,13 +21,13 @@ Each plan includes authentication strategy (interactive/static/none), `data-test
 **macOS / Linux** (one-liner):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/hyper-labs-ai/e2e-test-plan/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/hyper-labs-ai/e2e-test-plan/master/install.sh | bash
 ```
 
 **Windows** (PowerShell 5+ / pwsh):
 
 ```powershell
-irm https://raw.githubusercontent.com/hyper-labs-ai/e2e-test-plan/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/hyper-labs-ai/e2e-test-plan/master/install.ps1 | iex
 ```
 
 Installs `SKILL.md`, `references/`, and `evals/` to `~/.agents/skills/e2e-test-plan/`.
